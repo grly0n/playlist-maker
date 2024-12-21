@@ -59,7 +59,7 @@ class App(Tk):
         cancel_button = ttk.Button(options_frame, text="Cancel", state=DISABLED)
 
         # Listbox
-        list_box = Listbox(list_frame, width=60, height=20, selectmode=SINGLE)
+        list_box = Listbox(list_frame, width=60, height=20, selectmode=BROWSE)
 
         # Widget geometry management
         # Frames
@@ -134,6 +134,7 @@ class App(Tk):
 
     def edit_song(self, list_box: Listbox, entries: dict[str, ttk.Entry], buttons: dict[str, ttk.Button], selection: tuple) -> None:
         # Get information from song in list
+        self.selection = selection
         entry = list_box.get(self.selection[0])
         self.editingIndex = self.selection[0]
         words = entry.split(" - ")
@@ -168,9 +169,8 @@ class App(Tk):
         updated_entry = "{0} - {1} - {2} - {3}".format(updated_artist, updated_title, updated_album, updated_duration)
  
         # Delete old song, insert updated song into list
-        list_box.delete(self.selection[0])
-        list_box.insert(self.selection[0], updated_entry)
-
+        list_box.delete(self.editingIndex)
+        list_box.insert(self.editingIndex, updated_entry)
         # Finish edit function
         self.cancel_edit(entries, buttons)
 
