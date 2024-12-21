@@ -3,5 +3,6 @@ import os
 
 if __name__ == "__main__":
     print("Running application...")
-    app.root.mainloop()
+    myApp = app.App()
+    myApp.mainloop()
     print("Application terminated successfully")
