@@ -1,6 +1,7 @@
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, filedialog
 from startup import verify_credentials
+from spotipy import exceptions
 
 def center_window(tk: Tk, width: int, height: int) -> None:
     'Centers the application window in the middle of the screen and sizes the window given a height and width.'
@@ -15,10 +16,10 @@ def center_window(tk: Tk, width: int, height: int) -> None:
 class App(Tk):
     def __init__(self, credentials: list[str], master=None):
         super().__init__(master)
-        self.SPOTIFY = verify_credentials(credentials[0], credentials[1])
+        #self.SPOTIFY = verify_credentials(credentials[0], credentials[1])
         self.CurrentLine = 0
-        self.selection = tuple();
-        self.editingIndex = None;
+        self.selection = tuple()
+        self.editingIndex = None
         self.title("Playlist Maker")
         self.init_window()
         self.create_widgets()
@@ -54,6 +55,7 @@ class App(Tk):
         save_button = ttk.Button(options_frame, text="Save", state=DISABLED)
         delete_button = ttk.Button(options_frame, text="Delete", state=DISABLED)
         cancel_button = ttk.Button(options_frame, text="Cancel", state=DISABLED)
+        export_button = ttk.Button(options_frame, text="Export", state=DISABLED)
         # Listbox
         list_box = Listbox(list_frame, width=60, height=20, selectmode=BROWSE)
 
@@ -78,37 +80,45 @@ class App(Tk):
         delete_button.grid(column=1, row=1)
         save_button.grid(column=0, row=6)
         cancel_button.grid(column=1, row=6)
+        export_button.grid(column=0, row=7)
         # Listbox
         list_box.grid(column=2, row=0, pady=5, rowspan=5, columnspan=2, sticky=NSEW)
 
         # Initialize data structures to pass widgets as arguments
         entries = {'artist': artist_entry, 'title': title_entry, 'album': album_entry, 'duration': duration_entry}
-        buttons = {'edit': edit_button, 'delete': delete_button, 'save': save_button, 'cancel': cancel_button}
+        buttons = {'edit': edit_button, 'delete': delete_button, 'save': save_button, 'cancel': cancel_button, 'export': export_button}
 
         # Bind events to widgets
         list_box.bind('<<ListboxSelect>>', lambda event=None: self.select_song(edit_button, delete_button, list_box.curselection()))
-        link_entry.bind("<Return>", lambda event=None: self.enter_song(link_entry, list_box))
+        link_entry.bind("<Return>", lambda event=None: self.enter_song(link_entry, list_box, buttons))
         edit_button.bind("<Button-1>", lambda event=None: self.edit_song(list_box, entries, buttons, list_box.curselection()))
         save_button.bind("<Button-1>", lambda event=None: self.save_edit(list_box, entries, buttons))
         cancel_button.bind("<Button-1>", lambda event=None: self.cancel_edit(entries, buttons))
         delete_button.bind("<Button-1>", lambda event=None: self.delete_song(list_box, entries, buttons))
+        export_button.bind("<Button-1>", lambda event=None: self.export_list())
 
 
     def select_song(self, edit_button: ttk.Button, delete_button: ttk.Button, selection: tuple):
-        # Activate edit and delete buttons
+        'Upon song selection in the ListBox, edit and delete buttons are activated'
         if len(selection):
             edit_button.config(state=ACTIVE)
             delete_button.config(state=ACTIVE)
             self.selection = selection
 
 
-    def enter_song(self, link_entry: ttk.Entry, list_box: Listbox) -> None:
+    def enter_song(self, link_entry: ttk.Entry, list_box: Listbox, buttons: dict[str, ttk.Button]) -> None:
+        'Upon entering a Spotify song link, extract information and add to ListBox'
         # Get the Spotify song link
         track_url = link_entry.get()
         link_entry.delete(0, END)
         
         # Get Spotify track information
-        track_info = self.SPOTIFY.track(track_url)
+        try:
+            track_info = self.SPOTIFY.track(track_url)
+        except exceptions.SpotifyException:
+            print("Invalid song URL")
+            return
+        
         artist = track_info['album']['artists'][0]['name'].replace(" - ", "-")
         title = track_info['name'].replace(" - ", "-")
         album = track_info['album']['name'].replace(" - ", "-")
@@ -120,10 +130,12 @@ class App(Tk):
         list_entry = "{0} - {1} - {2} - {3}:{4:02d}".format(artist, title, album, minutes, seconds)
         list_box.insert(self.CurrentLine, list_entry)
         self.CurrentLine += 1
+        if self.CurrentLine == 1: buttons['export'].config(state=ACTIVE)
+        
 
 
     def edit_song(self, list_box: Listbox, entries: dict[str, ttk.Entry], buttons: dict[str, ttk.Button], selection: tuple) -> None:
-        # Get information from song in list
+        'Get information from song in list'
         self.selection = selection
         if len(selection):
             entry = list_box.get(self.selection[0])
@@ -154,6 +166,7 @@ class App(Tk):
 
 
     def save_edit(self, list_box: Listbox, entries: dict[str, ttk.Entry], buttons: dict[str, ttk.Button]) -> None:
+        'Apply edited song information to entry in ListBox'
         # Get updated song information from entries
         updated_artist = entries['artist'].get().replace(" - ", "-").strip()
         updated_title = entries['title'].get().replace(" - ", "-").strip()
@@ -169,6 +182,7 @@ class App(Tk):
 
 
     def cancel_edit(self, entries: dict[str, ttk.Entry], buttons: dict[str, ttk.Button]):
+        'Clear song information entries'
         # Clear entry fields
         entries['artist'].delete(0, END)
         entries['title'].delete(0, END)
@@ -190,11 +204,17 @@ class App(Tk):
 
 
     def delete_song(self, list_box: Listbox, entries: dict[str, ttk.Entry], buttons: dict[str, ttk.Button]):
-        # Remove the selected song from the list
+        'Remove the selected song from the ListBox'
         if len(self.selection):
             list_box.delete(self.selection[0])
             self.CurrentLine -= 1
             self.cancel_edit(entries, buttons)
+            if self.CurrentLine == 0: buttons['export'].config(state=DISABLED)
         # If no song is selected, disable the delete button
         else:
             buttons['delete'].config(state=DISABLED)
+
+
+    def export_list(self):
+        directory = filedialog.askdirectory()
+        print("Exporting list to ", directory)

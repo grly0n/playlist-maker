@@ -35,6 +35,36 @@ def center_window(tk: Tk, width: int, height: int) -> None:
 class Popup(Tk):
     def __init__(self, master=None):
         super().__init__(master)
+        self.title("")
+        self.init_window()
+        self.create_widgets()
+
+
+    def init_window(self):
+        center_window(self, 175, 75)
+        self.resizable(False, False)
+        self.iconbitmap("resources/error.ico")
+
+
+    def create_widgets(self):
+        # Frame
+        frame = ttk.Frame(self)
+        # Label
+        text = ttk.Label(frame, text="Error: Invalid Credentials")
+        # Button
+        button = ttk.Button(frame, text="OK")
+
+        # Geometry Management
+        frame.grid(column=0, row=0, sticky=NSEW)
+        text.grid(padx=20, pady=5)
+        button.grid(padx=20, pady=5)
+
+        # Action binding
+        button.bind("<Button-1>", lambda event=None: self.close_window(button))
+
+
+    def close_window(self, button: ttk.Button):
+        button.after(1, self.destroy)
 
 
 # Startup window
@@ -42,7 +72,6 @@ class Startup(Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.title("Playlist Maker")
-        self.loggedIn = IntVar()
         global VALID_CRED
         self.init_window()
         self.create_widgets()
@@ -51,7 +80,7 @@ class Startup(Tk):
     def init_window(self):
         center_window(self, 300, 150)
         self.resizable(False, False)
-        self.iconbitmap("./resources/note.ico")
+        self.iconbitmap("resources/note.ico")
 
 
     def create_widgets(self):
@@ -59,7 +88,6 @@ class Startup(Tk):
         frame = ttk.Frame(self)
         # Buttons
         enter_button = ttk.Button(frame, text="Enter")
-        check_button = ttk.Checkbutton(frame, text="Log out after use", variable=self.loggedIn, onvalue=1, offvalue=0, command=self.on_log_out)
         # Entries
         client_id_entry = ttk.Entry(frame)
         client_secret_entry = ttk.Entry(frame)
@@ -76,7 +104,6 @@ class Startup(Tk):
         client_id_entry.grid(column=1, row=1)
         client_secret_entry.grid(column=1, row=2)
         enter_button.grid(column=0, row=3)
-        check_button.grid(column=1, row=3)
 
         # Action binding
         enter_button.bind("<Button-1>", lambda event=None: self.enter_info(enter_button, client_id_entry, client_secret_entry))
@@ -93,12 +120,7 @@ class Startup(Tk):
 
         if VALID_CRED:
             enter_button.after(1, self.destroy)
-
-
-    def on_log_out(self):
-        if self.loggedIn.get() == 1:
-            print("Will log out")
         else:
-            print("Will not log out")
+            Popup().mainloop()
 
 
