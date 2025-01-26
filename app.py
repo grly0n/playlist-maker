@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk, filedialog
 from startup import verify_credentials
 from spotipy import exceptions
+from pathlib import Path
 
 def center_window(tk: Tk, width: int, height: int) -> None:
     'Centers the application window in the middle of the screen and sizes the window given a height and width.'
@@ -16,7 +17,7 @@ def center_window(tk: Tk, width: int, height: int) -> None:
 class App(Tk):
     def __init__(self, credentials: list[str], master=None):
         super().__init__(master)
-        #self.SPOTIFY = verify_credentials(credentials[0], credentials[1])
+        self.SPOTIFY = verify_credentials(credentials[0], credentials[1])
         self.CurrentLine = 0
         self.selection = tuple()
         self.editingIndex = None
@@ -56,8 +57,12 @@ class App(Tk):
         delete_button = ttk.Button(options_frame, text="Delete", state=DISABLED)
         cancel_button = ttk.Button(options_frame, text="Cancel", state=DISABLED)
         export_button = ttk.Button(options_frame, text="Export", state=DISABLED)
+        logout_button = ttk.Button(list_frame, text="Log out", state=ACTIVE)
         # Listbox
-        list_box = Listbox(list_frame, width=60, height=20, selectmode=BROWSE)
+        xscrollbar = ttk.Scrollbar(list_frame, orient=HORIZONTAL)                
+        list_box = Listbox(list_frame, width=60, height=20, selectmode=BROWSE, xscrollcommand=xscrollbar.set)
+        xscrollbar.config(command=list_box.xview)
+
 
         # Widget geometry management
         # Frames
@@ -81,8 +86,10 @@ class App(Tk):
         save_button.grid(column=0, row=6)
         cancel_button.grid(column=1, row=6)
         export_button.grid(column=0, row=7)
+        logout_button.grid(column=3, row=7, sticky=W)
         # Listbox
         list_box.grid(column=2, row=0, pady=5, rowspan=5, columnspan=2, sticky=NSEW)
+        xscrollbar.grid(column=2, row=6, columnspan=2, sticky=NSEW)
 
         # Initialize data structures to pass widgets as arguments
         entries = {'artist': artist_entry, 'title': title_entry, 'album': album_entry, 'duration': duration_entry}
@@ -96,6 +103,7 @@ class App(Tk):
         cancel_button.bind("<Button-1>", lambda event=None: self.cancel_edit(entries, buttons))
         delete_button.bind("<Button-1>", lambda event=None: self.delete_song(list_box, entries, buttons))
         export_button.bind("<Button-1>", lambda event=None: self.export_list())
+        logout_button.bind("<Button-1>", lambda event=None: self.logout(logout_button))
 
 
     def select_song(self, edit_button: ttk.Button, delete_button: ttk.Button, selection: tuple):
@@ -218,3 +226,8 @@ class App(Tk):
     def export_list(self):
         directory = filedialog.askdirectory()
         print("Exporting list to ", directory)
+
+
+    def logout(self, button: ttk.Button):
+        Path.unlink(".login")
+        button.after(1, self.destroy)
