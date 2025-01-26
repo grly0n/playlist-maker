@@ -3,6 +3,9 @@ from tkinter import ttk, filedialog
 from startup import verify_credentials
 from spotipy import exceptions
 from pathlib import Path
+from startup import Popup
+import subprocess
+import os
 
 def center_window(tk: Tk, width: int, height: int) -> None:
     'Centers the application window in the middle of the screen and sizes the window given a height and width.'
@@ -21,6 +24,8 @@ class App(Tk):
         self.CurrentLine = 0
         self.selection = tuple()
         self.editingIndex = None
+        self.linksList = []
+        self.songsInfo = Variable(value=[])
         self.title("Playlist Maker")
         self.init_window()
         self.create_widgets()
@@ -51,6 +56,7 @@ class App(Tk):
         title_entry = ttk.Entry(options_frame, state=DISABLED)
         album_entry = ttk.Entry(options_frame, state=DISABLED)
         duration_entry = ttk.Entry(options_frame, state=DISABLED)
+        list_name_entry = ttk.Entry(options_frame, state=DISABLED)
         # Buttons
         edit_button = ttk.Button(options_frame, text="Edit", state=DISABLED)
         save_button = ttk.Button(options_frame, text="Save", state=DISABLED)
@@ -59,8 +65,8 @@ class App(Tk):
         export_button = ttk.Button(options_frame, text="Export", state=DISABLED)
         logout_button = ttk.Button(list_frame, text="Log out", state=ACTIVE)
         # Listbox
-        xscrollbar = ttk.Scrollbar(list_frame, orient=HORIZONTAL)                
-        list_box = Listbox(list_frame, width=60, height=20, selectmode=BROWSE, xscrollcommand=xscrollbar.set)
+        xscrollbar = ttk.Scrollbar(list_frame, orient=HORIZONTAL)
+        list_box = Listbox(list_frame, width=60, height=20, selectmode=BROWSE, listvariable=self.songsInfo, xscrollcommand=xscrollbar.set)
         xscrollbar.config(command=list_box.xview)
 
 
@@ -80,6 +86,7 @@ class App(Tk):
         title_entry.grid(column=1, row=3, padx=5, sticky=W)
         album_entry.grid(column=1, row=4, padx=5, sticky=W)
         duration_entry.grid(column=1, row=5, padx=5, sticky=W)
+        list_name_entry.grid(column=1, row=8, padx=5, pady=5, sticky=W)
         # Buttons
         edit_button.grid(column=0, row=1)
         delete_button.grid(column=1, row=1)
@@ -97,12 +104,12 @@ class App(Tk):
 
         # Bind events to widgets
         list_box.bind('<<ListboxSelect>>', lambda event=None: self.select_song(edit_button, delete_button, list_box.curselection()))
-        link_entry.bind("<Return>", lambda event=None: self.enter_song(link_entry, list_box, buttons))
+        link_entry.bind("<Return>", lambda event=None: self.enter_song(link_entry, list_box, entries, buttons))
         edit_button.bind("<Button-1>", lambda event=None: self.edit_song(list_box, entries, buttons, list_box.curselection()))
         save_button.bind("<Button-1>", lambda event=None: self.save_edit(list_box, entries, buttons))
         cancel_button.bind("<Button-1>", lambda event=None: self.cancel_edit(entries, buttons))
         delete_button.bind("<Button-1>", lambda event=None: self.delete_song(list_box, entries, buttons))
-        export_button.bind("<Button-1>", lambda event=None: self.export_list())
+        export_button.bind("<Button-1>", lambda event=None: self.export_list(entries, buttons))
         logout_button.bind("<Button-1>", lambda event=None: self.logout(logout_button))
 
 
@@ -114,11 +121,12 @@ class App(Tk):
             self.selection = selection
 
 
-    def enter_song(self, link_entry: ttk.Entry, list_box: Listbox, buttons: dict[str, ttk.Button]) -> None:
+    def enter_song(self, link_entry: ttk.Entry, list_box: Listbox, entries: dict[str, ttk.Label], buttons: dict[str, ttk.Button]) -> None:
         'Upon entering a Spotify song link, extract information and add to ListBox'
         # Get the Spotify song link
         track_url = link_entry.get()
         link_entry.delete(0, END)
+        self.linksList.append(track_url)
         
         # Get Spotify track information
         try:
@@ -138,7 +146,8 @@ class App(Tk):
         list_entry = "{0} - {1} - {2} - {3}:{4:02d}".format(artist, title, album, minutes, seconds)
         list_box.insert(self.CurrentLine, list_entry)
         self.CurrentLine += 1
-        if self.CurrentLine == 1: buttons['export'].config(state=ACTIVE)
+        if self.CurrentLine == 1: 
+            buttons['export'].config(state=ACTIVE)
         
 
 
@@ -215,17 +224,46 @@ class App(Tk):
         'Remove the selected song from the ListBox'
         if len(self.selection):
             list_box.delete(self.selection[0])
+            self.linksList.pop(self.selection[0])
             self.CurrentLine -= 1
             self.cancel_edit(entries, buttons)
-            if self.CurrentLine == 0: buttons['export'].config(state=DISABLED)
+            if self.CurrentLine == 0: 
+                buttons['export'].config(state=DISABLED)
         # If no song is selected, disable the delete button
         else:
             buttons['delete'].config(state=DISABLED)
 
 
-    def export_list(self):
-        directory = filedialog.askdirectory()
-        print("Exporting list to ", directory)
+    def export_list(self, entries: dict[str, ttk.Entry], buttons: dict[str, ttk.Button]):
+        # Write song list to file
+        file = filedialog.asksaveasfilename(title="Select List Save Location", defaultextension='.txt')
+        with open(file, "w") as open_file:
+            for song in self.songsInfo.get():
+                open_file.write(f"{song}\n")
+
+        # Deactivate buttons and entries while downloading
+        for entry in entries:
+            print(entry)
+            if entries[entry].state == ACTIVE:
+                entries[entry].delete(0, END)
+                entries[entry].config(state=DISABLED)
+        for button in buttons:
+            if buttons[button].state == ACTIVE:
+                buttons[entry].config(state=DISABLED)
+
+
+        # Get directory to download songs to
+        directory = filedialog.askdirectory(title="Select Song Download Location")
+        current_directory = os.getcwd()
+        os.chdir(directory)
+
+        # Download songs
+        for url in self.linksList:
+            command = "spotdl --preload --output \"{artists} - {title}\" download " + url
+            print(subprocess.run(command, shell=True, capture_output=True))
+
+        os.chdir(current_directory)
+        Popup(False, "Songs Downloaded")
 
 
     def logout(self, button: ttk.Button):

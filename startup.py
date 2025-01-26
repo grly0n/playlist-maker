@@ -31,11 +31,13 @@ def center_window(tk: Tk, width: int, height: int) -> None:
     tk.geometry(f'{width}x{height}+{center_x}+{center_y}')
     return
 
-# Popup window (upon invalid credentials)
+# Popup window
 class Popup(Tk):
-    def __init__(self, master=None):
+    def __init__(self, error: bool, text: str, master=None):
         super().__init__(master)
         self.title("")
+        self.error = error
+        self.text = text
         self.init_window()
         self.create_widgets()
 
@@ -43,14 +45,15 @@ class Popup(Tk):
     def init_window(self):
         center_window(self, 175, 75)
         self.resizable(False, False)
-        self.iconbitmap("resources/error.ico")
+        if self.error: self.iconbitmap("resources/error.ico")
+        else: self.iconbitmap("resources/alert.ico")
 
 
     def create_widgets(self):
         # Frame
         frame = ttk.Frame(self)
         # Label
-        text = ttk.Label(frame, text="Error: Invalid Credentials")
+        text = ttk.Label(frame, text=self.text)
         # Button
         button = ttk.Button(frame, text="OK")
 
@@ -121,6 +124,6 @@ class Startup(Tk):
         if VALID_CRED:
             enter_button.after(1, self.destroy)
         else:
-            Popup().mainloop()
+            Popup(True, "Error: Invalid Credentials").mainloop()
 
 
