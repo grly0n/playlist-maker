@@ -4,6 +4,7 @@ from startup import verify_credentials
 from spotipy import exceptions
 from pathlib import Path
 from startup import Popup
+from sys import platform
 import subprocess
 import os
 
@@ -35,7 +36,10 @@ class App(Tk):
         'Initializes various window attributes'
         center_window(self, 650, 400)
         self.resizable(False, False)
-        self.iconbitmap("./resources/note.ico")
+        if platform == "win32" or platform == "win64":
+            self.iconbitmap("./resources/note.ico")
+        elif platform == "linux":
+            self.iconbitmap("@resources/note.xbm")
 
 
     def create_widgets(self) -> None:
@@ -56,7 +60,6 @@ class App(Tk):
         title_entry = ttk.Entry(options_frame, state=DISABLED)
         album_entry = ttk.Entry(options_frame, state=DISABLED)
         duration_entry = ttk.Entry(options_frame, state=DISABLED)
-        list_name_entry = ttk.Entry(options_frame, state=DISABLED)
         # Buttons
         edit_button = ttk.Button(options_frame, text="Edit", state=DISABLED)
         save_button = ttk.Button(options_frame, text="Save", state=DISABLED)
@@ -86,7 +89,6 @@ class App(Tk):
         title_entry.grid(column=1, row=3, padx=5, sticky=W)
         album_entry.grid(column=1, row=4, padx=5, sticky=W)
         duration_entry.grid(column=1, row=5, padx=5, sticky=W)
-        list_name_entry.grid(column=1, row=8, padx=5, pady=5, sticky=W)
         # Buttons
         edit_button.grid(column=0, row=1)
         delete_button.grid(column=1, row=1)

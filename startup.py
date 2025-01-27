@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+from sys import platform
 
 
 VALID_CRED = FALSE
@@ -45,8 +46,16 @@ class Popup(Tk):
     def init_window(self):
         center_window(self, 175, 75)
         self.resizable(False, False)
-        if self.error: self.iconbitmap("resources/error.ico")
-        else: self.iconbitmap("resources/alert.ico")
+        if self.error: 
+            if platform == "win32" or platform == "win64":
+                self.iconbitmap("resources/error.ico")
+            elif platform == "linux":
+                self.iconbitmap("@resources/error.xbm")
+        else: 
+            if platform == "win32" or platform == "win64":    
+                self.iconbitmap("resources/alert.ico")
+            elif platform == "linux":
+                self.iconbitmap("@resources/alert.xbm")
 
 
     def create_widgets(self):
@@ -83,8 +92,10 @@ class Startup(Tk):
     def init_window(self):
         center_window(self, 300, 150)
         self.resizable(False, False)
-        self.iconbitmap("resources/note.ico")
-
+        if platform == "win32" or platform == "win64":
+            self.iconbitmap("resources/note.ico")
+        elif platform == "linux":
+            self.iconbitmap("@resources/note.xbm")
 
     def create_widgets(self):
         # Frame

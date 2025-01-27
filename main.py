@@ -3,6 +3,8 @@ import startup
 import os
 import time
 
+from sys import platform
+
 def read_credentials() -> list[str]:
     'Searches for credentials from a previous login'
     if not os.path.isfile('.login'):
@@ -13,7 +15,7 @@ def read_credentials() -> list[str]:
 
 if __name__ == "__main__":
 
-    print("Running application...")
+    print(f"Running application on {platform}...")
 
 
     # Read previously stored credentials
@@ -28,6 +30,8 @@ if __name__ == "__main__":
         # If credentials were invalid, exit without launching application
         if startup.VALID_CRED == 0:
             quit()
+
+        credentials = read_credentials()
             
     # Launch app with credentials
     myApp = app.App(credentials)
