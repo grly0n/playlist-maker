@@ -37,9 +37,9 @@ class App(Tk):
         center_window(self, 650, 400)
         self.resizable(False, False)
         if platform == "win32" or platform == "win64":
-            self.iconbitmap("./resources/note.ico")
+            self.iconbitmap("../resources/note.ico")
         elif platform == "linux":
-            self.iconbitmap("@resources/note.xbm")
+            self.iconbitmap("@../resources/note.xbm")
 
 
     def create_widgets(self) -> None:

@@ -7,9 +7,9 @@ from sys import platform
 
 def read_credentials() -> list[str]:
     'Searches for credentials from a previous login'
-    if not os.path.isfile('.login'):
+    if not os.path.isfile('../.login'):
         return []
-    with open('.login', 'r') as login_file:
+    with open('../.login', 'r') as login_file:
         for line in login_file:
             return line.split(" ")
 

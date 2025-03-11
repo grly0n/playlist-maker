@@ -1,4 +1,4 @@
 .cache
 .login
-.cache
 .env
+__pycache__

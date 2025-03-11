@@ -48,14 +48,14 @@ class Popup(Tk):
         self.resizable(False, False)
         if self.error: 
             if platform == "win32" or platform == "win64":
-                self.iconbitmap("resources/error.ico")
+                self.iconbitmap("../resources/error.ico")
             elif platform == "linux":
-                self.iconbitmap("@resources/error.xbm")
+                self.iconbitmap("@../resources/error.xbm")
         else: 
             if platform == "win32" or platform == "win64":    
-                self.iconbitmap("resources/alert.ico")
+                self.iconbitmap("../resources/alert.ico")
             elif platform == "linux":
-                self.iconbitmap("@resources/alert.xbm")
+                self.iconbitmap("@../resources/alert.xbm")
 
 
     def create_widgets(self):
@@ -93,9 +93,9 @@ class Startup(Tk):
         center_window(self, 300, 150)
         self.resizable(False, False)
         if platform == "win32" or platform == "win64":
-            self.iconbitmap("resources/note.ico")
+            self.iconbitmap("../resources/note.ico")
         elif platform == "linux":
-            self.iconbitmap("@resources/note.xbm")
+            self.iconbitmap("@../resources/note.xbm")
 
     def create_widgets(self):
         # Frame
