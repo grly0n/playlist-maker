@@ -3,19 +3,23 @@ from tkinter import ttk
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from sys import platform
+import requests
 
 
-VALID_CRED = FALSE
+VALID_CRED = TRUE
 
-def verify_credentials(client_id: str, client_secret: str) -> spotipy.client:
-    global VALID_CRED
-    SPOTIFY = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
-    try:
-        SPOTIFY.track('https://open.spotify.com/track/3mwvKOyMmG77zZRunnxp9E?si=8275ce0fb7604260')
-        VALID_CRED = True
-    except ValueError:
-        VALID_CRED = False
-    return SPOTIFY
+def verify_credentials(client_id: str, client_secret: str):
+    request_body = "grant_type=client_credentials&client_id="+client_id+"&client_secret="+client_secret
+    print("making token request with", request_body)
+    access_token_request = requests.post("https://accounts.spotify.com/api/token", )
+    # global VALID_CRED
+    # SPOTIFY = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
+    # try:
+    #     SPOTIFY.track('https://open.spotify.com/track/3mwvKOyMmG77zZRunnxp9E?si=8275ce0fb7604260')
+    #     VALID_CRED = True
+    # except ValueError:
+    #     VALID_CRED = False
+    # return SPOTIFY
 
 
 def store_credentials(client_id: str, client_secret: str) -> None:
@@ -48,14 +52,14 @@ class Popup(Tk):
         self.resizable(False, False)
         if self.error: 
             if platform == "win32" or platform == "win64":
-                self.iconbitmap("resources/error.ico")
-            elif platform == "linux":
-                self.iconbitmap("@resources/error.xbm")
+                self.iconbitmap("../resources/error.ico")
+            # elif platform == "linux":
+                # self.iconbitmap("@../resources/error.xbm")
         else: 
             if platform == "win32" or platform == "win64":    
-                self.iconbitmap("resources/alert.ico")
-            elif platform == "linux":
-                self.iconbitmap("@resources/alert.xbm")
+                self.iconbitmap("../resources/alert.ico")
+            # elif platform == "linux":
+                # self.iconbitmap("@../resources/alert.xbm")
 
 
     def create_widgets(self):
@@ -93,9 +97,7 @@ class Startup(Tk):
         center_window(self, 300, 150)
         self.resizable(False, False)
         if platform == "win32" or platform == "win64":
-            self.iconbitmap("resources/note.ico")
-        elif platform == "linux":
-            self.iconbitmap("@resources/note.xbm")
+            self.iconbitmap("../resources/note.ico")
 
     def create_widgets(self):
         # Frame
