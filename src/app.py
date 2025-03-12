@@ -21,7 +21,7 @@ def center_window(tk: Tk, width: int, height: int) -> None:
 class App(Tk):
     def __init__(self, credentials: list[str], master=None):
         super().__init__(master)
-        self.SPOTIFY = verify_credentials(credentials[0], credentials[1])
+        # self.SPOTIFY = verify_credentials(credentials[0], credentials[1])
         self.CurrentLine = 0
         self.selection = tuple()
         self.editingIndex = None
@@ -37,9 +37,9 @@ class App(Tk):
         center_window(self, 650, 400)
         self.resizable(False, False)
         if platform == "win32" or platform == "win64":
-            self.iconbitmap("../resources/note.ico")
+            self.iconbitmap("resources/note.ico")
         elif platform == "linux":
-            self.iconbitmap("@../resources/note.xbm")
+            self.iconbitmap("@resources/note.xbm")
 
 
     def create_widgets(self) -> None:
@@ -132,7 +132,8 @@ class App(Tk):
         
         # Get Spotify track information
         try:
-            track_info = self.SPOTIFY.track(track_url)
+            #track_info = self.SPOTIFY.track(track_url)
+            track_info = None
         except exceptions.SpotifyException:
             print("Invalid song URL")
             return

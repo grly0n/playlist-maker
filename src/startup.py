@@ -6,20 +6,21 @@ from sys import platform
 import requests
 
 
-VALID_CRED = TRUE
+VALID_CRED = True
 
-def verify_credentials(client_id: str, client_secret: str):
+def verify_credentials(client_id: str, client_secret: str) -> bool:
     request_body = "grant_type=client_credentials&client_id="+client_id+"&client_secret="+client_secret
-    print("making token request with", request_body)
-    access_token_request = requests.post("https://accounts.spotify.com/api/token", )
-    # global VALID_CRED
-    # SPOTIFY = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id, client_secret))
-    # try:
-    #     SPOTIFY.track('https://open.spotify.com/track/3mwvKOyMmG77zZRunnxp9E?si=8275ce0fb7604260')
-    #     VALID_CRED = True
-    # except ValueError:
-    #     VALID_CRED = False
-    # return SPOTIFY
+    access_token_request = requests.post("https://accounts.spotify.com/api/token", data=request_body, headers={
+        "Content-Type":"application/x-www-form-urlencoded"})
+    
+    global VALID_CRED
+    if access_token_request.status_code != 200:
+        VALID_CRED = False
+        return False
+    else:
+        VALID_CRED = True
+        print(access_token_request.json())
+        return True
 
 
 def store_credentials(client_id: str, client_secret: str) -> None:
@@ -52,12 +53,12 @@ class Popup(Tk):
         self.resizable(False, False)
         if self.error: 
             if platform == "win32" or platform == "win64":
-                self.iconbitmap("../resources/error.ico")
+                self.iconbitmap("resources/error.ico")
             # elif platform == "linux":
                 # self.iconbitmap("@../resources/error.xbm")
         else: 
             if platform == "win32" or platform == "win64":    
-                self.iconbitmap("../resources/alert.ico")
+                self.iconbitmap("resources/alert.ico")
             # elif platform == "linux":
                 # self.iconbitmap("@../resources/alert.xbm")
 
@@ -97,7 +98,7 @@ class Startup(Tk):
         center_window(self, 300, 150)
         self.resizable(False, False)
         if platform == "win32" or platform == "win64":
-            self.iconbitmap("../resources/note.ico")
+            self.iconbitmap("resources/note.ico")
 
     def create_widgets(self):
         # Frame
